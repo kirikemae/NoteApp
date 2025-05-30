@@ -3,46 +3,41 @@ package com.example.newnoteapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.newnoteapp.domain.FileNotebook
-import com.example.newnoteapp.ui.theme.NewnoteappTheme
-import timber.log.Timber
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import com.example.newnoteapp.domain.Importance
+import com.example.newnoteapp.domain.Note
+import com.example.newnoteapp.ui.screens.EditNoteScreen
+import java.util.*
 
 class MainActivity : ComponentActivity() {
-    private lateinit var notebook: FileNotebook
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        notebook = FileNotebook.load(this)
-
-        Timber.plant(Timber.DebugTree())
-        enableEdgeToEdge()
+        val exampleNote = Note(
+            uid = UUID.randomUUID().toString(),
+            title = "",
+            content = "",
+            importance = Importance.NORMAL,
+            color = android.graphics.Color.WHITE,
+            selfDestructDate = null
+        )
 
         setContent {
-            NewnoteappTheme {
-                TestOperationsUI(this, notebook)
+            MaterialTheme {
+                Surface {
+                    EditNoteScreen(
+                        note = exampleNote,
+                        onSave = { note ->
+                            println("Сохраняем заметку: $note")
+                        },
+                        onCancel = {
+                            finish()
+                        }
+                    )
+                }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    NewnoteappTheme {
-        Greeting("Android")
     }
 }
