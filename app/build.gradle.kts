@@ -40,6 +40,7 @@ android {
 }
 
 dependencies {
+    implementation("androidx.navigation:navigation-compose:2.7.5")
     implementation("com.jakewharton.timber:timber:5.0.1")
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.10")
     implementation(libs.androidx.core.ktx)
