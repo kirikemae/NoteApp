@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import com.example.newnoteapp.domain.Importance
+import com.example.newnoteapp.domain.model.Importance
 import androidx.compose.ui.unit.dp
 
 @Composable

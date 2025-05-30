@@ -1,4 +1,4 @@
-package com.example.newnoteapp.domain
+package com.example.newnoteapp.domain.model
 
 import android.graphics.Color
 import org.json.JSONObject
@@ -14,7 +14,7 @@ data class Note(
     val content: String,
     val color: Int = Color.WHITE,
     val importance: Importance = Importance.NORMAL,
-    val selfDestructDate: Long? = null // время в миллисекундах
+    val selfDestructDate: Long? = null
 ) {
     companion object {
         fun parse(json: JSONObject): Note? {

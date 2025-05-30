@@ -40,6 +40,9 @@ android {
 }
 
 dependencies {
+    implementation("io.insert-koin:koin-core:3.5.3")
+    implementation("io.insert-koin:koin-android:3.5.3")
+    implementation("io.insert-koin:koin-androidx-compose:3.5.3")
     implementation("androidx.navigation:navigation-compose:2.7.5")
     implementation("com.jakewharton.timber:timber:5.0.1")
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.10")

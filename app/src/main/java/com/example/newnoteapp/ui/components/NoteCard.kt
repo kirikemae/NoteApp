@@ -8,8 +8,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.unit.dp
-import com.example.newnoteapp.domain.Importance
-import com.example.newnoteapp.domain.Note
+import com.example.newnoteapp.domain.model.Importance
+import com.example.newnoteapp.domain.model.Note
 
 
 @Composable

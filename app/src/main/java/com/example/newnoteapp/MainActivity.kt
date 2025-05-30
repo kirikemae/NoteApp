@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import com.example.newnoteapp.ui.navigate.NoteNavigation
 import com.example.newnoteapp.ui.theme.NewnoteappTheme
 
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

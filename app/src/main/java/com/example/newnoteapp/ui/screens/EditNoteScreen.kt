@@ -8,8 +8,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
-import com.example.newnoteapp.domain.Note
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.newnoteapp.domain.model.Note
 import com.example.newnoteapp.ui.components.*
+import com.example.newnoteapp.ui.viewmodel.NoteViewModel
+import org.koin.androidx.compose.koinViewModel
+
+@Composable
+fun EditNoteRoute(
+    noteId: String,
+    onNavigateBack: () -> Unit,
+    viewModel: NoteViewModel = koinViewModel()
+) {
+    val noteFlow = viewModel.getNote(noteId)
+    val note by noteFlow.collectAsStateWithLifecycle(initialValue = null)
+
+    note?.let { currentNote ->
+        EditNoteScreen(
+            note = currentNote,
+            onSave = { updatedNote ->
+                viewModel.addOrUpdate(updatedNote)
+                onNavigateBack()
+            },
+            onCancel = onNavigateBack
+        )
+    }
+}
 
 @Composable
 fun EditNoteScreen(
