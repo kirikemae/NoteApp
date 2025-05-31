@@ -20,13 +20,13 @@ fun ColorSelector(
 ) {
     val presetColors = listOf(
         Color.White,
-        Color(0xFFFFEBEE),
-        Color(0xFFE8F5E8),
-        Color(0xFFE3F2FD),
-        Color(0xFFFFF3E0),
-        Color(0xFFF3E5F5),
-        Color(0xFFE0F2F1),
-        Color(0xFFFFF8E1)
+        Color(0xFFFF5722),
+        Color(0xFF4CAF50),
+        Color(0xFF2196F3),
+        Color(0xFFFF9800),
+        Color(0xFF9C27B0),
+        Color(0xFF00BCD4),
+        Color(0xFFFFEB3B)
     )
 
     Column(modifier = modifier.fillMaxWidth()) {

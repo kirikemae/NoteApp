@@ -3,60 +3,81 @@ package com.example.newnoteapp.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.newnoteapp.domain.model.Note
-import com.example.newnoteapp.data.repository.NoteRepositoryImpl
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import com.example.newnoteapp.domain.repository.NoteRepository
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import android.util.Log
 
 class NoteViewModel(
-    private val repository: NoteRepositoryImpl
+    private val repository: NoteRepository
 ) : ViewModel() {
 
     val notes: StateFlow<List<Note>> = repository.getAllNotes()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    val isLoading: StateFlow<Boolean> = repository.isLoading
+    val syncStatus: StateFlow<String?> = repository.syncStatus
 
-    private val _syncStatus = MutableStateFlow<String?>(null)
-    val syncStatus: StateFlow<String?> = _syncStatus.asStateFlow()
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    init {
-        syncWithBackend()
+    companion object {
+        private const val TAG = "NoteViewModel"
+    }
+
+    fun getNote(id: String): StateFlow<Note?> {
+        return repository.getNoteById(id)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = null
+            )
     }
 
     fun addOrUpdate(note: Note) {
         viewModelScope.launch {
-            repository.addOrUpdate(note)
+            try {
+                Log.d(TAG, "Сохранение заметки: ${note.title}")
+                repository.saveNote(note)
+                _errorMessage.value = null
+            } catch (e: Exception) {
+                Log.e(TAG, "Ошибка при сохранении заметки", e)
+                _errorMessage.value = "Ошибка сохранения: ${e.message}"
+            }
         }
     }
 
     fun delete(id: String) {
         viewModelScope.launch {
-            repository.deleteNote(id)
+            try {
+                Log.d(TAG, "Удаление заметки: $id")
+                repository.deleteNote(id)
+                _errorMessage.value = null
+            } catch (e: Exception) {
+                Log.e(TAG, "Ошибка при удалении заметки", e)
+                _errorMessage.value = "Ошибка удаления: ${e.message}"
+            }
         }
     }
 
-    fun getNote(id: String) = repository.getNoteById(id)
-
     fun syncWithBackend() {
         viewModelScope.launch {
-            _isLoading.value = true
-            _syncStatus.value = "Синхронизация..."
-
             try {
+                Log.d(TAG, "Запуск синхронизации")
                 repository.syncWithBackend()
-                _syncStatus.value = "Синхронизация завершена"
+                _errorMessage.value = null
             } catch (e: Exception) {
-                _syncStatus.value = "Ошибка синхронизации"
-            } finally {
-                _isLoading.value = false
-                kotlinx.coroutines.delay(3000)
-                _syncStatus.value = null
+                Log.e(TAG, "Ошибка синхронизации", e)
+                _errorMessage.value = "Ошибка синхронизации: ${e.message}"
             }
         }
+    }
+
+    fun clearError() {
+        _errorMessage.value = null
     }
 }

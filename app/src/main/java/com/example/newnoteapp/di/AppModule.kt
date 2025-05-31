@@ -2,18 +2,31 @@ package com.example.newnoteapp.di
 
 import com.example.newnoteapp.data.local.FileNotebook
 import com.example.newnoteapp.data.local.LocalDataSource
-import com.example.newnoteapp.data.remote.NoteRemoteDataSource
+import com.example.newnoteapp.data.remote.RemoteDataSource
 import com.example.newnoteapp.data.repository.NoteRepositoryImpl
+import com.example.newnoteapp.domain.repository.NoteRepository
+import com.example.newnoteapp.ui.viewmodel.NoteViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
-import com.example.newnoteapp.ui.viewmodel.NoteViewModel
-import com.example.newnoteapp.data.remote.DummyNoteRemoteDataSource
 
 val appModule = module {
-    single { FileNotebook(androidContext()) }
-    single<LocalDataSource> { FileNotebook(androidContext()) }
-    single<NoteRemoteDataSource> { DummyNoteRemoteDataSource() }
-    single { NoteRepositoryImpl(get(), get()) }
-    viewModel { NoteViewModel(get()) }
+
+    // Local Data Source
+    single<LocalDataSource> {
+        FileNotebook(androidContext())
+    }
+
+    // Repository
+    single<NoteRepository> {
+        NoteRepositoryImpl(
+            localDataSource = get<LocalDataSource>(),
+            remoteDataSource = get<RemoteDataSource>()
+        )
+    }
+
+    // ViewModel
+    viewModel {
+        NoteViewModel(get<NoteRepository>())
+    }
 }

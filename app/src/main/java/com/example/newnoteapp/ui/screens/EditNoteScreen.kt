@@ -76,7 +76,10 @@ fun EditNoteScreen(
 
         ColorSelector(
             color = Color(currentNote.color),
-            onColorClick = { showColorPicker = true }
+            onColorClick = { showColorPicker = true },
+            onPresetColorClick = { selectedColor ->
+                currentNote = currentNote.copy(color = selectedColor.toArgb())
+            }
         )
 
         Spacer(modifier = Modifier.height(16.dp))

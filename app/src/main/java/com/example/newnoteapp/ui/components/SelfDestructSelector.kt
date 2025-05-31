@@ -17,7 +17,7 @@ fun SelfDestructSelector(
     modifier: Modifier = Modifier
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
-    val defaultDate = remember { System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000 } // +30 дней
+    val defaultDate = remember { System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000 }
 
     Column(modifier = modifier) {
         Row(

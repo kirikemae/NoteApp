@@ -29,15 +29,25 @@ fun NoteListRoute(
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val syncStatus by viewModel.syncStatus.collectAsStateWithLifecycle()
+    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
+
+    errorMessage?.let { error ->
+        LaunchedEffect(error) {
+
+            android.util.Log.e("NoteListRoute", "Error: $error")
+        }
+    }
 
     NoteListScreen(
         notes = notes,
         isLoading = isLoading,
         syncStatus = syncStatus,
+        errorMessage = errorMessage,
         onAddNote = onAddNote,
         onNoteClick = onNoteClick,
         onDeleteNote = { note -> viewModel.delete(note.uid) },
-        onSync = { viewModel.syncWithBackend() }
+        onSync = { viewModel.syncWithBackend() },
+        onClearError = { viewModel.clearError() }
     )
 }
 
@@ -47,22 +57,46 @@ fun NoteListScreen(
     notes: List<Note>,
     isLoading: Boolean,
     syncStatus: String?,
+    errorMessage: String?,
     onAddNote: () -> Unit,
     onNoteClick: (Note) -> Unit,
     onDeleteNote: (Note) -> Unit,
     onSync: () -> Unit,
+    onClearError: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    errorMessage?.let { error ->
+        LaunchedEffect(error) {
+            snackbarHostState.showSnackbar(
+                message = error,
+                duration = SnackbarDuration.Long
+            )
+            onClearError()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Заметки") },
                 actions = {
-                    IconButton(onClick = onSync) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Синхронизировать"
-                        )
+                    IconButton(
+                        onClick = onSync,
+                        enabled = !isLoading
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Синхронизировать"
+                            )
+                        }
                     }
                 }
             )
@@ -77,6 +111,9 @@ fun NoteListScreen(
                     contentDescription = "Добавить заметку"
                 )
             }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         },
         modifier = modifier.fillMaxSize()
     ) { paddingValues ->
@@ -110,20 +147,43 @@ fun NoteListScreen(
                 }
             }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(
-                    items = notes,
-                    key = { note -> note.uid }
-                ) { note ->
-                    SwipeToDeleteItem(
-                        note = note,
-                        onDelete = { onDeleteNote(note) },
-                        onNoteClick = { onNoteClick(note) }
-                    )
+            if (notes.isEmpty() && !isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Нет заметок",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Нажмите + чтобы создать первую заметку",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(
+                        items = notes,
+                        key = { note -> note.uid }
+                    ) { note ->
+                        SwipeToDeleteItem(
+                            note = note,
+                            onDelete = { onDeleteNote(note) },
+                            onNoteClick = { onNoteClick(note) }
+                        )
+                    }
                 }
             }
         }
@@ -175,7 +235,7 @@ fun SwipeToDeleteItem(
                             tint = Color.White
                         )
                         Text(
-                            text = "Delete",
+                            text = "Удалить",
                             color = Color.White,
                             style = MaterialTheme.typography.bodyLarge
                         )
