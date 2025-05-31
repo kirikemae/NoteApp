@@ -25,17 +25,21 @@ class NoteViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    private val noteCache = mutableMapOf<String, StateFlow<Note?>>()
+
     companion object {
         private const val TAG = "NoteViewModel"
     }
 
     fun getNote(id: String): StateFlow<Note?> {
-        return repository.getNoteById(id)
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = null
-            )
+        return noteCache.getOrPut(id) {
+            repository.getNoteById(id)
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = null
+                )
+        }
     }
 
     fun addOrUpdate(note: Note) {
@@ -44,6 +48,7 @@ class NoteViewModel(
                 Log.d(TAG, "Сохранение заметки: ${note.title}")
                 repository.saveNote(note)
                 _errorMessage.value = null
+                noteCache.remove(note.uid)
             } catch (e: Exception) {
                 Log.e(TAG, "Ошибка при сохранении заметки", e)
                 _errorMessage.value = "Ошибка сохранения: ${e.message}"
@@ -57,6 +62,7 @@ class NoteViewModel(
                 Log.d(TAG, "Удаление заметки: $id")
                 repository.deleteNote(id)
                 _errorMessage.value = null
+                noteCache.remove(id)
             } catch (e: Exception) {
                 Log.e(TAG, "Ошибка при удалении заметки", e)
                 _errorMessage.value = "Ошибка удаления: ${e.message}"
@@ -79,5 +85,10 @@ class NoteViewModel(
 
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        noteCache.clear()
     }
 }

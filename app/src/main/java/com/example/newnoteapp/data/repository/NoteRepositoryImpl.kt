@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
+
 class NoteRepositoryImpl(
     private val localDataSource: LocalDataSource,
     private val remoteDataSource: RemoteDataSource
@@ -30,11 +31,13 @@ class NoteRepositoryImpl(
     }
 
     override fun getAllNotes(): Flow<List<Note>> {
+        Log.d(TAG, "Получение всех заметок из локального хранилища")
         return localDataSource.getAllNotes()
     }
 
     override fun getNoteById(id: String): Flow<Note?> {
-        return localDataSource.getNoteById(id)
+        Log.d(TAG, "Получение заметки по ID: $id")
+        return localDataSource.getNoteByIdFlow(id)
     }
 
     override suspend fun saveNote(note: Note) {
@@ -42,13 +45,12 @@ class NoteRepositoryImpl(
             Log.d(TAG, "Сохранение заметки: ${note.title}")
             _isLoading.value = true
             _syncStatus.value = "Сохранение заметки..."
-
             localDataSource.saveNote(note)
             Log.d(TAG, "Заметка сохранена локально")
-
             try {
                 val savedNote = remoteDataSource.saveNote(note)
                 localDataSource.saveNote(savedNote)
+                localDataSource.markAsSynced(savedNote.uid)
                 _syncStatus.value = "Заметка синхронизирована"
                 Log.d(TAG, "Заметка успешно синхронизирована с сервером")
             } catch (e: NetworkException.RevisionConflict) {
@@ -123,9 +125,11 @@ class NoteRepositoryImpl(
 
                 val localNotes = localDataSource.getAllNotes().first()
                 Log.d(TAG, "Локально ${localNotes.size} заметок")
-
                 localNotes.forEach { localDataSource.deleteNote(it.uid) }
-                remoteNotes.forEach { localDataSource.saveNote(it) }
+                remoteNotes.forEach {
+                    localDataSource.saveNote(it)
+                    localDataSource.markAsSynced(it.uid)
+                }
 
                 _syncStatus.value = "Синхронизация завершена"
                 Log.d(TAG, "Синхронизация успешно завершена")
@@ -148,12 +152,10 @@ class NoteRepositoryImpl(
     private suspend fun handleRevisionConflict(note: Note) {
         try {
             Log.d(TAG, "Обработка конфликта ревизий для заметки: ${note.title}")
-
             syncWithBackend()
-
             val savedNote = remoteDataSource.saveNote(note)
             localDataSource.saveNote(savedNote)
-
+            localDataSource.markAsSynced(savedNote.uid)
             _syncStatus.value = "Конфликт разрешен, заметка сохранена"
             Log.d(TAG, "Конфликт ревизий успешно разрешен")
         } catch (e: Exception) {
@@ -168,4 +170,7 @@ class NoteRepositoryImpl(
             _syncStatus.value = null
         }
     }
+
+
+
 }

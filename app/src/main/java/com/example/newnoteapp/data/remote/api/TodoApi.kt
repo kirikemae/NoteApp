@@ -9,12 +9,6 @@ interface TodoApi {
     @GET("list")
     suspend fun getTodoList(): Response<TodoListResponse>
 
-    @PATCH("list")
-    suspend fun updateTodoList(
-        @Header("X-Last-Known-Revision") revision: Int,
-        @Body request: TodoListRequest
-    ): Response<TodoListResponse>
-
     @GET("list/{id}")
     suspend fun getTodoItem(
         @Path("id") id: String

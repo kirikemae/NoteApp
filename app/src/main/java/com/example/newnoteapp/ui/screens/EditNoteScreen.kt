@@ -3,7 +3,9 @@ package com.example.newnoteapp.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -20,7 +22,7 @@ fun EditNoteRoute(
     onNavigateBack: () -> Unit,
     viewModel: NoteViewModel = koinViewModel()
 ) {
-    val noteFlow = viewModel.getNote(noteId)
+    val noteFlow = remember(noteId) { viewModel.getNote(noteId) }
     val note by noteFlow.collectAsStateWithLifecycle(initialValue = null)
 
     note?.let { currentNote ->
@@ -32,8 +34,16 @@ fun EditNoteRoute(
             },
             onCancel = onNavigateBack
         )
+    } ?: run {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
     }
 }
+
 
 @Composable
 fun EditNoteScreen(

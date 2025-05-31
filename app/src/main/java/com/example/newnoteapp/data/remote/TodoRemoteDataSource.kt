@@ -173,7 +173,6 @@ class TodoRemoteDataSource(
             } else if (response.code() == 404) {
                 Log.w(TAG, "Заметка с ID $id уже не существует на сервере")
             } else if (response.code() == 400) {
-                // Конфликт ревизий при удалении
                 Log.w(TAG, "Конфликт ревизий при удалении, обновляем ревизию и повторяем")
                 updateCurrentRevision()
                 val retryResponse = api.deleteTodoItem(id, currentRevision)
